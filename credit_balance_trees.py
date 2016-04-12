@@ -15,31 +15,27 @@ bal = pd.read_csv('data/balance.csv')
 
 X = bal.drop('Balance', axis=1)
 
-X_upper= X[X['Limit'] >= 3000 ].drop('Unnamed: 0', axis=1)
-X_upper.head()
-X_lower= X[X['Limit'] < 3000 ].drop('Unnamed: 0', axis=1)
-y=bal[['Balance','Limit']]
-y_upper = np.ravel(y[y['Limit'] >= 3000 ].drop('Limit', axis=1))
-y_lower = np.ravel(y[y['Limit'] < 3000 ].drop('Limit', axis=1))
+y=bal[['Balance']]
 
 # Married - 1, Not Married - 0
-X_upper['Married'] = pd.get_dummies(X_upper['Married'])
+X['Married'] = pd.get_dummies(X['Married'])
 # Female - 0, Male - 1
-X_upper['Gender'] = pd.get_dummies(X_upper['Gender'])
+X['Gender'] = pd.get_dummies(X['Gender'])
 
 # Student Yes - 1, Student No - 0
-X_upper['Student'] = pd.get_dummies(X_upper['Student'])
+X['Student'] = pd.get_dummies(X['Student'])
 
 
 # Get the Dummy variables
-ethnicity_dummy = pd.get_dummies(X_upper['Ethnicity'])
+ethnicity_dummy = pd.get_dummies(X['Ethnicity'])
 # Only need two of the three values
-X_upper[ ['Asian', 'Caucasian'] ] = ethnicity_dummy[ ['Asian', 'Caucasian'] ]
+X[ ['Asian', 'Caucasian'] ] = ethnicity_dummy[ ['Asian', 'Caucasian'] ]
 # Remove the Ethnicity column
-del X_upper['Ethnicity']
-X_upper.head()
-
-train_x, test_x, train_y, test_y = train_test_split(X_upper, y_upper, test_size=.2, random_state=1)
+del X['Ethnicity']
+X = X.iloc[:,1:]
+X.head()
+y
+train_x, test_x, train_y, test_y = train_test_split(X, y, test_size=.2, random_state=1)
 
 rf_grid = {'max_depth': [1,2,3,None],
            'max_features': [1, 3, 10],
@@ -84,12 +80,12 @@ rf_grid_search.best_params_
 
 gd_grid_search.best_params_
 """
-{'learning_rate': 0.6,
- 'max_depth': 1,
- 'max_features': 8,
- 'min_samples_leaf': 5,
+{'learning_rate': 0.1,
+ 'max_depth': 2,
+ 'max_features': 9,
+ 'min_samples_leaf': 3,
  'min_samples_split': 1,
- 'n_estimators': 1500,
+ 'n_estimators': 2000,
  'random_state': 1}
 """
 
@@ -116,7 +112,7 @@ cross_val(gd_best, test_x, test_y)
 cross_val(rf_best, test_x, test_y)
 
 
-col_names = X_upper.columns
+col_names = X.columns
 # sort importances
 indices = np.argsort(gd_best.feature_importances_)
 # plot as bar chart
@@ -127,6 +123,7 @@ plt.yticks(np.arange(len(col_names)), np.array(col_names)[indices], fontsize=14)
 plt.xticks(fontsize=14)
 _ = plt.xlabel('Relative importance', fontsize=18)
 
-fig, axs = plot_partial_dependence(gd_best, train_x, range(X_upper.shape[1]) ,
+fig, axs = plot_partial_dependence(gd_best, train_x, range(X.shape[1]) ,
                                    feature_names=col_names, figsize=(15, 10))
 fig.tight_layout()
+
